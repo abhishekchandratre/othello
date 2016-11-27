@@ -24,7 +24,7 @@ int main(int argc,char *argv[])
 void process_game(int **matrix,int n)
 {
 	int move,row,col,reset;
-	int **possible_matrix,view_possible;
+	int **possible_matrix;
 	int no_move[2],finish,best_move[2];
 
 	move=DARK;

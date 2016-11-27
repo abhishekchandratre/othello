@@ -40,7 +40,7 @@ void free_matrix(int **matrix,int n)
 void print_matrix(int **matrix, int n)
 {
 	int i,j;
-	printf("\nPrinting given matrix\n");
+	printf("\n");
 	for(i=-1;i<n;i++){
 		if(-1==i)
 			printf("-\t");
