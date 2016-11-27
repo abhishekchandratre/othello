@@ -89,14 +89,18 @@ void print_all_nodes(node *state)
 	}
 }
 
-node *new_state(int move,int utility,int depth, node *parent_node)
+node *new_state(int move,int depth, node *parent_node)
 {
 	node *temp;
 	temp = (node *)malloc(sizeof(node));
 	temp->id = deb_count;
 	deb_count++;
 	temp->row = temp->col = 0;
-	temp->utility = utility;
+	if(max==move){
+		temp->utility = WORST;
+	}else{
+		temp->utility = BEST;
+	}
 	temp->move = move;
 	temp->depth = depth;
 	temp->number_of_childs = 0;
@@ -108,19 +112,18 @@ node *new_state(int move,int utility,int depth, node *parent_node)
 	return temp;
 }
 
+void reset_utility(node *state)
+{
+	if(max==state->move){
+		state->utility = WORST;
+	}else{
+		state->utility = BEST;
+	}
+}
 
 void initialize_place_for_child_nodes(node *state)
 {
 	state->child_nodes = (node **)malloc(sizeof(node *)*state->number_of_childs);
-}
-
-void fill_possible_nodes(node *state)
-{
-	int i;
-	state->child_nodes = (node **)malloc(sizeof(node *)*state->number_of_childs);
-	for(i=0;i<state->number_of_childs;i++){
-
-	}
 }
 
 int get_corner_count(node *state)
@@ -183,6 +186,7 @@ int generate_successors(node *state)
 	int alt_move;
 	int **possible_array;
 	node *temp;
+	reset_utility(state);
 	if(is_terminal(state)){
 		//Now will have to fill utility
 		fill_utility(state);
@@ -200,10 +204,10 @@ int generate_successors(node *state)
 		flip_move(&alt_move);
 		for(i=0;i<state->number_of_childs;i++){
 			if(max==alt_move){
-				temp = new_state(alt_move,WORST,state->depth + 1,state);
+				temp = new_state(alt_move,state->depth + 1,state);
 			}
 			else{
-				temp = new_state(alt_move,BEST,state->depth + 1,state);
+				temp = new_state(alt_move,state->depth + 1,state);
 			}
 			temp->row = possible_array[0][i];
 			temp->col = possible_array[1][i];
@@ -230,7 +234,6 @@ int generate_successors(node *state)
 					index = i;
 				}
 			}else{
-				printf("\nMax prunied++++++++++++++++++++++++++++++++++++++");
 				state->child_nodes[i]->purned = 1;
 				deb_pruned++;
 			}
@@ -244,7 +247,6 @@ int generate_successors(node *state)
 				}
 			}else{
 				//maximizer has better option available
-				printf("\nmin prunied--------------------------------------");
 				deb_pruned++;
 				state->child_nodes[i]->purned = 1;
 			}
@@ -289,6 +291,18 @@ int search_tree(node *state)
 	return index;
 }
 
+void free_tree(node *state)
+{
+	int i;
+	if(is_terminal(state)){
+		free(state);
+		return;
+	}
+	for(i=0;i<state->number_of_childs;i++){
+		free_tree(state->child_nodes[i]);
+	}
+	free(state);
+}
 
 //Params
 //matrix is possible matrix which contains possible fields
@@ -297,23 +311,31 @@ void get_best_move(int **src_matrix,int move,int n,int *best_move)
 {
 	node *state;
 	int best_state;
+	int last_deb_count=-1;
 	struct timeval start,end;
 	double elapsed=0;
 	max_depth = 3;
 	deb_count = 0;
 	max = move;
 	copy_matrix(src_matrix,root_matrix,n);
-	state = new_state(move,WORST,1,NULL);
+	state = new_state(move,1,NULL);
 	gettimeofday(&start,NULL);
 	while(elapsed < TIME_LIMIT){
 		best_state = generate_successors(state);
+		if(last_deb_count==deb_count){
+			printf("\n[%d]-[%d]No new node max depth-%d pruned-%d",state->child_nodes[best_state]->row,state->child_nodes[best_state]->col,max_depth,deb_pruned);
+			break;
+		}
+		last_deb_count = deb_count;
 		//best_state = search_tree(state);
 		max_depth = max_depth + 1;
-		printf("\n[%d]-[%d]increasing max depth to %d pruned %d",state->child_nodes[best_state]->row,state->child_nodes[best_state]->col,max_depth,deb_pruned);
+		//printf("\n[%d]-[%d]increasing max depth to %d pruned %d",state->child_nodes[best_state]->row,state->child_nodes[best_state]->col,max_depth,deb_pruned);
 		gettimeofday(&end,NULL);
 		elapsed = (end.tv_sec - start.tv_sec) +
 					((end.tv_usec - start.tv_usec)/1000000.0);
 	}
+	printf("\n[%d]-[%d]Time limit max depth-%d pruned-%d",state->child_nodes[best_state]->row,state->child_nodes[best_state]->col,max_depth,deb_pruned);
+	free_tree(state);
 	best_move[0] = state->child_nodes[best_state]->row;
 	best_move[1] = state->child_nodes[best_state]->col;
 }
