@@ -23,6 +23,7 @@
 #define SQUARE 9
 
 //colors
+#define BLK   "\x1B[30m"
 #define RED   "\x1B[31m"
 #define GRN   "\x1B[32m"
 #define YEL   "\x1B[33m"
@@ -30,6 +31,15 @@
 #define MAG   "\x1B[35m"
 #define CYN   "\x1B[36m"
 #define WHT   "\x1B[37m"
+//db color
+#define BG_BLK   "\x1B[40m"
+#define BG_RED   "\x1B[41m"
+#define BG_GRN   "\x1B[42m"
+#define BG_YEL   "\x1B[43m"
+#define BG_BLU   "\x1B[44m"
+#define BG_MAG   "\x1B[45m"
+#define BG_CYN   "\x1B[46m"
+#define BG_WHT   "\x1B[47m"
 #define RESET "\x1B[0m"
 
 int get_self(int **matrix,int row,int col,int n)
