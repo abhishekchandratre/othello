@@ -10,6 +10,8 @@
 #define BEST INT_MAX
 #define INITIAL_DEPTH 3
 #define TIME_LIMIT 2
+#define HEIGHT 10
+#define WIDTH 24
 
 
 typedef struct node{
@@ -33,9 +35,32 @@ static int **matrix;		//Use this matrix, dont change root matrix
 static int n;			//the size which never changes
 static int max;			//Max of this iteration
 
+WINDOW *statistics;
+
 //Debug variable
 int deb_count = 0;
 int deb_pruned = 0;
+
+void initialize_statistics()
+{
+	int i;
+	statistics = newwin(HEIGHT + 3,WIDTH,13,2);
+	wbkgd(statistics,COLOR_PAIR(COLOR_WHITE_MAGENTA));
+	box(statistics,0,0);
+	mvwprintw(statistics,1,1,"Depth|Time  |  Nodes");
+	for(i=3;i<10+3;i++){
+		mvwprintw(statistics,i-1,3,"%d",i);
+	}
+	wrefresh(statistics);
+}
+
+void update_statistics(int depth,double elapsed,int node)
+{
+	wattron(statistics,COLOR_PAIR(COLOR_LAST_LIGHT));
+	mvwprintw(statistics,depth-1,1,"  %d   %1.4lf %9.0d",depth,elapsed,node);
+	wattroff(statistics,COLOR_PAIR(COLOR_LAST_LIGHT));
+	wrefresh(statistics);
+}
 
 void initializ_root_possible_matrix_for_best_move(int num)
 {
@@ -43,6 +68,7 @@ void initializ_root_possible_matrix_for_best_move(int num)
 	root_matrix = initialize_matrix(num);
 	matrix = initialize_matrix(num);
 	n = num;
+	initialize_statistics();
 }
 
 void fill_matrix_from_root(node *state)
@@ -320,10 +346,12 @@ void get_best_move(int **src_matrix,int move,int n,int *best_move)
 	copy_matrix(src_matrix,root_matrix,n);
 	state = new_state(move,1,NULL);
 	gettimeofday(&start,NULL);
+	initialize_statistics();
 	while(elapsed < TIME_LIMIT){
 		best_state = generate_successors(state);
 		if(last_deb_count==deb_count){
 			mvprintw(0,0,"\n[%d]-[%d]No new node max depth-%d pruned-%d",state->child_nodes[best_state]->row,state->child_nodes[best_state]->col,max_depth,deb_pruned);
+			update_statistics(max_depth-1,elapsed,deb_count);
 			break;
 		}
 		last_deb_count = deb_count;
@@ -333,6 +361,7 @@ void get_best_move(int **src_matrix,int move,int n,int *best_move)
 		gettimeofday(&end,NULL);
 		elapsed = (end.tv_sec - start.tv_sec) +
 					((end.tv_usec - start.tv_usec)/1000000.0);
+		update_statistics(max_depth-1,elapsed,deb_count);
 	}
 	mvprintw(0,0,"[%d]-[%d]Time limit max depth-%d pruned-%d",state->child_nodes[best_state]->row,state->child_nodes[best_state]->col,max_depth,deb_pruned);
 	free_tree(state);

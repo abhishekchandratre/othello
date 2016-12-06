@@ -20,6 +20,7 @@
 #define COLOR_SCOREBOARD 8
 
 #define COLOR_WHITE_WHITE 9
+#define COLOR_WHITE_MAGENTA 10
 
 /*Function would initialize a game state with given size n*/
 /*Where WHITE is 0*/
@@ -78,6 +79,7 @@ void initialize_colors()
 	init_pair(COLOR_SELECTED,COLOR_WHITE, COLOR_CYAN);
 	init_pair(COLOR_SCOREBOARD,COLOR_BLACK, COLOR_BLUE);
 	init_pair(COLOR_WHITE_WHITE,COLOR_WHITE, COLOR_WHITE);
+	init_pair(COLOR_WHITE_MAGENTA,COLOR_BLACK, COLOR_MAGENTA);
 }
 
 void initialize_scoreboard(int n)
