@@ -15,6 +15,7 @@ int main(int argc,char *argv[])
 	n = atoi(argv[1]);
 	initialize_colors();
 	initialize_windows(n);
+	initialize_scoreboard(n);
 	matrix = initialize_matrix(n);
 	initializ_root_possible_matrix_for_best_move(n);
 	process_game(matrix,n);
@@ -28,6 +29,7 @@ void process_game(int **matrix,int n)
 {
 	int move,row,col,reset,possible_values;
 	int **possible_matrix;
+	int dark_count,light_count;
 	int no_move[2],finish,best_move[2];
 	char ch=0;
 
@@ -35,6 +37,10 @@ void process_game(int **matrix,int n)
 	row=col=reset=finish=0;
 	possible_matrix = initialize_matrix(n);
 	while(1){
+		dark_count=get_matrix_count(matrix,n,DARK);
+		light_count=get_matrix_count(matrix,n,LIGHT);
+		update_scoreboard(move,dark_count,light_count);
+		print_matrix_with_windows(matrix,-1,-1,-1,-1,n);
 		while(1){
 			if(reset){
 				/*If move was invalid*/

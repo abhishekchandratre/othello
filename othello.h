@@ -4,9 +4,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ncurses.h>
+#include <string.h>
 #include "helper.h"
 #include "validation.h"
 #define SCALE 3
+#define SCORE_BOARD_WIDTH 40
 #define COLOR_POSSIBLE_SELECTED 2
 #define COLOR_POSSIBLE 3
 #define COLOR_LAST_LIGHT 4
@@ -14,12 +16,19 @@
 #define COLOR_DARK 6
 #define COLOR_GREY 1
 
+#define COLOR_SELECTED 7
+#define COLOR_SCOREBOARD 8
+
+#define COLOR_WHITE_WHITE 9
+
 /*Function would initialize a game state with given size n*/
 /*Where WHITE is 0*/
 /*BLACK is 1*/
 /*GREY is -1*/
 
 static WINDOW ***windows;
+static WINDOW *score_board;
+static WINDOW *player1, *player2;
 
 WINDOW *create_window(int height,int width, int y,int x)
 {
@@ -49,11 +58,11 @@ void initialize_windows(int n)
 	}
 	for(i=0;i<n;i++){
 		x = startx;
-		y = y + height/n;
 		for(j=0;j<n;j++){
 			windows[i][j] = create_window(height/n,width/n,y,x);
 			x = x + width/n;
 		}
+		y = y + height/n;
 	}
 	refresh();
 }
@@ -66,6 +75,53 @@ void initialize_colors()
 	init_pair(COLOR_LAST_LIGHT,COLOR_RED, COLOR_WHITE);
 	init_pair(COLOR_LIGHT,COLOR_BLACK, COLOR_WHITE);
 	init_pair(COLOR_DARK,COLOR_WHITE, COLOR_BLACK);
+	init_pair(COLOR_SELECTED,COLOR_WHITE, COLOR_CYAN);
+	init_pair(COLOR_SCOREBOARD,COLOR_BLACK, COLOR_BLUE);
+	init_pair(COLOR_WHITE_WHITE,COLOR_WHITE, COLOR_WHITE);
+}
+
+void initialize_scoreboard(int n)
+{
+	int height,width;
+	char score_board_str[] = "SCOREBOARD";
+	char player1_str[] = "PLAYER 1";
+	char player2_str[] = "OTHELLO";
+	height = SCALE*n;
+	width = SCORE_BOARD_WIDTH;
+	score_board = newwin(3,width,2,(COLS - width)/2);
+	box(score_board,0,0);
+	mvwprintw(score_board,1,(width - strlen(score_board_str))/2,score_board_str);
+	wbkgd(score_board,COLOR_PAIR(COLOR_SCOREBOARD));
+	//Initialize player 1 board
+	player1 = newwin(4,width/2,5,(COLS - width)/2);
+	box(player1,0,0);
+	mvwprintw(player1,1,(width/2 - strlen(player1_str))/2,player1_str);
+	wbkgd(player1,COLOR_PAIR(COLOR_SCOREBOARD));
+	//Initialize othello board
+	player2 = newwin(4,width/2,5,COLS/2);
+	box(player2,0,0);
+	mvwprintw(player2,1,(width/2 - strlen(player2_str))/2,player2_str);
+	wbkgd(player2,COLOR_PAIR(COLOR_SCOREBOARD));
+	//Refesh window
+	wrefresh(score_board);
+	wrefresh(player1);
+	wrefresh(player2);
+}
+
+void update_scoreboard(int move,int dark_count,int light_count)
+{
+	if(DARK==move){
+		wbkgd(player1,COLOR_PAIR(COLOR_SELECTED));
+		wbkgd(player2,COLOR_PAIR(COLOR_SCOREBOARD));
+	}else{
+		wbkgd(player2,COLOR_PAIR(COLOR_SELECTED));
+		wbkgd(player1,COLOR_PAIR(COLOR_SCOREBOARD));
+	}
+	mvwprintw(player1,2,(SCORE_BOARD_WIDTH/2 - 3)/2,"%d",dark_count);
+	mvwprintw(player2,2,(SCORE_BOARD_WIDTH/2 - 3)/2,"%d",light_count);
+	wnoutrefresh(player1);
+	wnoutrefresh(player2);
+	refresh();
 }
 
 int **initialize_matrix(int n)
@@ -217,6 +273,7 @@ void move_grey(int row,int col)
 	wbkgd(windows[row][col],COLOR_PAIR(COLOR_GREY));
 	print_in_middle(windows[row][col],0);
 }
+
 void print_matrix_with_windows(int **matrix,int row,int col,int curr_row,int curr_col,int n)
 {
 	int i,j;
