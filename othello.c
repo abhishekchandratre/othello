@@ -10,14 +10,17 @@ int main(int argc,char *argv[])
 		printf("Usage:./a.out <number_of_boxes >= 4>\n");
 		exit(1);
 	}
+	initscr();
+	start_color();
 	n = atoi(argv[1]);
+	initialize_colors();
+	initialize_windows(n);
 	matrix = initialize_matrix(n);
 	initializ_root_possible_matrix_for_best_move(n);
-	/*print_matrix(matrix,n);*/
 	process_game(matrix,n);
 	free_matrix(matrix,n);
-	printf("\n");
-
+	getch();
+	endwin();
 	return 0;
 }
 
@@ -27,7 +30,6 @@ void process_game(int **matrix,int n)
 	int **possible_matrix;
 	int no_move[2],finish,best_move[2];
 	char ch=0;
-	char buf=0;
 
 	move=DARK;
 	row=col=reset=finish=0;
@@ -48,13 +50,13 @@ void process_game(int **matrix,int n)
 						break;
 					}
 				}
-				printf("\nPass to other player no possible move");
+				mvprintw(LINES-1,0,"Pass to other player no possible move");
 				break;
 			}else{
 				no_move[0] = no_move[1] = -1;
 				if(LIGHT==move){
 					get_best_move(matrix,move,n,best_move);
-					printf("\nPrinting best move [%d] [%d].",best_move[0],best_move[1]);
+					mvprintw(LINES-3,0,"Printing best move [%d] [%d].",best_move[0],best_move[1]);
 					row = best_move[0];
 					col = best_move[1];
 				}
@@ -72,13 +74,11 @@ void process_game(int **matrix,int n)
 					}
 					curr_row = possible_array[0][counter];
 					curr_col = possible_array[1][counter];
-					printf("\nPlayer1 Play ");
-					print_matrix_with_colors(possible_matrix,row,col,curr_row,curr_col,n);
-					scanf("%c",&ch);
-					scanf("%c",&buf);
+					mvprintw(LINES-2,0,"Player1 Play ");
+					print_matrix_with_windows(possible_matrix,row,col,curr_row,curr_col,n);
+					ch = getch();
 					if(ch=='y')
 						break;
-					system("@cls||clear");
 					counter++;
 				}
 				row = curr_row;
@@ -86,7 +86,7 @@ void process_game(int **matrix,int n)
 				free_2d_array(possible_array,2);
 			}
 			if(GREY!=matrix[row][col]){
-				printf("\nInvalid Move");
+				mvprintw(LINES-4,0,"\nInvalid Move");
 				continue;
 			}
 			make_move(matrix,row,col,move);
@@ -95,15 +95,14 @@ void process_game(int **matrix,int n)
 				confirm_move(matrix,row,col,n);
 				break;
 			}else{
-				printf("\n Invalid move please try again");
+				/*printf("\n Invalid move please try again");*/
 				reset = 1;
 			}
 		}
 		if(finish){
 			int winner;
-			printf("\nNo futher moves possible calculating winner.");
 			winner = get_winner(matrix,n);
-			printf("\nWinner is %d",winner);
+			mvprintw(LINES-5,0,"\nWinner is %d",winner);
 			break;
 		}
 		flip_move(&move);

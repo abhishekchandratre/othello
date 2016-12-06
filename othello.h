@@ -3,14 +3,71 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <ncurses.h>
 #include "helper.h"
 #include "validation.h"
 #define SCALE 3
+#define COLOR_POSSIBLE_SELECTED 2
+#define COLOR_POSSIBLE 3
+#define COLOR_LAST_LIGHT 4
+#define COLOR_LIGHT 5
+#define COLOR_DARK 6
+#define COLOR_GREY 1
 
 /*Function would initialize a game state with given size n*/
 /*Where WHITE is 0*/
 /*BLACK is 1*/
 /*GREY is -1*/
+
+static WINDOW ***windows;
+
+WINDOW *create_window(int height,int width, int y,int x)
+{
+	WINDOW *local_win;
+	local_win = newwin(height,width,y,x);
+	box(local_win,0,0);
+	wbkgd(local_win,COLOR_PAIR(COLOR_GREY));
+	wrefresh(local_win);
+	return local_win;
+}
+
+void initialize_windows(int n)
+{
+	int i,j;
+	int height,width;
+	int startx,starty;
+	int x,y;
+	height = SCALE*n;
+	width = (SCALE + 4)*n;
+	starty = (LINES - height) / 2;
+	startx = (COLS - width) / 2;
+	x = startx;
+	y = starty;
+	windows = (WINDOW ***)malloc(sizeof(WINDOW **)*n);
+	for(i=0;i<n;i++){
+		windows[i] = (WINDOW **)malloc(sizeof(WINDOW *)*n);
+	}
+	for(i=0;i<n;i++){
+		x = startx;
+		y = y + height/n;
+		for(j=0;j<n;j++){
+			windows[i][j] = create_window(height/n,width/n,y,x);
+			x = x + width/n;
+		}
+	}
+	refresh();
+}
+
+void initialize_colors()
+{
+	init_pair(COLOR_GREY,COLOR_BLUE, COLOR_GREEN);
+	init_pair(COLOR_POSSIBLE_SELECTED,COLOR_BLACK, COLOR_CYAN);
+	init_pair(COLOR_POSSIBLE,COLOR_BLACK, COLOR_YELLOW);
+	init_pair(COLOR_LAST_LIGHT,COLOR_RED, COLOR_WHITE);
+	init_pair(COLOR_LIGHT,COLOR_BLACK, COLOR_WHITE);
+	init_pair(COLOR_DARK,COLOR_WHITE, COLOR_BLACK);
+}
+
 int **initialize_matrix(int n)
 {
 	int i,j;
@@ -113,5 +170,86 @@ void print_matrix_with_colors(int **matrix,int row,int col,int curr_row,int curr
 	}
 	printf(RESET);
 	printf("\n");
+}
+
+
+void print_in_middle(WINDOW *window,int print_char)
+{
+	wclear(window);
+	box(window,0,0);
+	wmove(window,SCALE/2,(SCALE + 4)/2);
+	if(print_char)
+		waddch(window,ACS_CKBOARD);
+}
+
+void move_possible_selected(int row,int col)
+{
+	wbkgd(windows[row][col],COLOR_PAIR(COLOR_POSSIBLE_SELECTED));
+	print_in_middle(windows[row][col],1);
+}
+
+void move_possible(int row,int col)
+{
+	wbkgd(windows[row][col],COLOR_PAIR(COLOR_POSSIBLE));
+	print_in_middle(windows[row][col],0);
+}
+
+void move_last_light(int row,int col)
+{
+	wbkgd(windows[row][col],COLOR_PAIR(COLOR_LAST_LIGHT));
+	print_in_middle(windows[row][col],1);
+}
+
+void move_light(int row,int col)
+{
+	wbkgd(windows[row][col],COLOR_PAIR(COLOR_LIGHT));
+	print_in_middle(windows[row][col],1);
+}
+
+void move_dark(int row,int col)
+{
+	wbkgd(windows[row][col],COLOR_PAIR(COLOR_DARK));
+	print_in_middle(windows[row][col],1);
+}
+
+void move_grey(int row,int col)
+{
+	wbkgd(windows[row][col],COLOR_PAIR(COLOR_GREY));
+	print_in_middle(windows[row][col],0);
+}
+void print_matrix_with_windows(int **matrix,int row,int col,int curr_row,int curr_col,int n)
+{
+	int i,j;
+	for(i=0;i<n;i++){
+		for(j=0;j<n;j++){
+			if(matrix[i][j]==GREY){
+				//non explored moves
+				move_grey(i,j);
+			}
+			else if(matrix[i][j]==POSSIBLE_MOVE){
+				if((i==curr_row)&&(j==curr_col)){
+					//select move
+					move_possible_selected(i,j);
+				}else{
+					move_possible(i,j);
+				}
+			}
+			else if(matrix[i][j]==LIGHT){
+				if((i==row)&&(j==col)){
+					//last AI move
+					move_last_light(i,j);
+				}else{
+					//Other AI tiles
+					move_light(i,j);
+				}
+			}
+			else if(matrix[i][j]==DARK){
+				//Human moves
+				move_dark(i,j);
+			}
+			wnoutrefresh(windows[i][j]);
+		}
+	}
+	refresh();
 }
 #endif
