@@ -339,7 +339,7 @@ void get_best_move(int **src_matrix,int move,int n,int *best_move)
 	int best_state;
 	int last_deb_count=-1;
 	struct timeval start,end;
-	double elapsed=0;
+	double elapsed=0,last_elapsed=0;
 	max_depth = 3;
 	deb_count = 0;
 	max = move;
@@ -348,6 +348,7 @@ void get_best_move(int **src_matrix,int move,int n,int *best_move)
 	gettimeofday(&start,NULL);
 	initialize_statistics();
 	while(elapsed < TIME_LIMIT){
+		last_elapsed = elapsed;
 		best_state = generate_successors(state);
 		if(last_deb_count==deb_count){
 			mvprintw(0,0,"\n[%d]-[%d]No new node max depth-%d pruned-%d",state->child_nodes[best_state]->row,state->child_nodes[best_state]->col,max_depth,deb_pruned);
@@ -362,6 +363,9 @@ void get_best_move(int **src_matrix,int move,int n,int *best_move)
 		elapsed = (end.tv_sec - start.tv_sec) +
 					((end.tv_usec - start.tv_usec)/1000000.0);
 		update_statistics(max_depth-1,elapsed,deb_count);
+		if((elapsed - last_elapsed) > (TIME_LIMIT - elapsed)){
+			break;
+		}
 	}
 	mvprintw(0,0,"[%d]-[%d]Time limit max depth-%d pruned-%d",state->child_nodes[best_state]->row,state->child_nodes[best_state]->col,max_depth,deb_pruned);
 	free_tree(state);
