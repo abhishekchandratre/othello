@@ -349,26 +349,28 @@ void get_best_move(int **src_matrix,int move,int n,int *best_move)
 	initialize_statistics();
 	while(elapsed < TIME_LIMIT){
 		last_elapsed = elapsed;
+		//Get best state
 		best_state = generate_successors(state);
+		//Check if no new nodes generated
 		if(last_deb_count==deb_count){
 			mvprintw(0,0,"\n[%d]-[%d]No new node max depth-%d pruned-%d",state->child_nodes[best_state]->row,state->child_nodes[best_state]->col,max_depth,deb_pruned);
 			update_statistics(max_depth-1,elapsed,deb_count);
 			break;
 		}
 		last_deb_count = deb_count;
-		//best_state = search_tree(state);
 		max_depth = max_depth + 1;
-		//printf("\n[%d]-[%d]increasing max depth to %d pruned %d",state->child_nodes[best_state]->row,state->child_nodes[best_state]->col,max_depth,deb_pruned);
 		gettimeofday(&end,NULL);
 		elapsed = (end.tv_sec - start.tv_sec) +
 					((end.tv_usec - start.tv_usec)/1000000.0);
 		update_statistics(max_depth-1,elapsed,deb_count);
+		//Check if we have some more time 
 		if((elapsed - last_elapsed) > (TIME_LIMIT - elapsed)){
 			break;
 		}
 	}
 	mvprintw(0,0,"[%d]-[%d]Time limit max depth-%d pruned-%d",state->child_nodes[best_state]->row,state->child_nodes[best_state]->col,max_depth,deb_pruned);
 	free_tree(state);
+	//Return the best move
 	best_move[0] = state->child_nodes[best_state]->row;
 	best_move[1] = state->child_nodes[best_state]->col;
 }
