@@ -7,7 +7,7 @@ othello.o: othello.c othello.h validation.h helper.h astar.h
 	$(CC) $(CFLAGS) othello.c -o othello.o
 
 othello: othello.o
-	$(CC) othello.o -o othello
+	$(CC) -lcurses othello.o -o othello
 
 clean: 
 	rm *.o othello
